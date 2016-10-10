@@ -2113,21 +2113,65 @@ function repeat (string, times) {
   return result;
 }
 
-function TextCell (text) {
+function TextCell(text) {
   this.text = text.split("\n");
 }
-
 TextCell.prototype.minWidth = function() {
   return this.text.reduce(function(width, line) {
-  return Math.max(width, line.length);
+    return Math.max(width, line.length);
   }, 0);
 };
-
-TextCell.prototype.draw = function(width, height){
+TextCell.prototype.minHeight = function() {
+  return this.text.length;
+};
+TextCell.prototype.draw = function(width, height) {
   var result = [];
-  for (var i = 0; i < height; i++){
+  for (var i = 0; i < height; i++) {
     var line = this.text[i] || "";
     result.push(line + repeat(" ", width - line.length));
   }
   return result;
+};
+
+Код использует функцию-помощник, которая называется repeat. Она строит текстовую строку, и ее значение это парметр в виде текстовой строки, повторяющейся столько раз, сколько указано во втором параметре. Метод draw использует ее для того, чтобы добавить отступ для строк таким образом, чтобы они соответствовали указанной длине.
+
+Давайте попробуем все что мы до сих пор написали, построив шахматную доску 5 на 5.
+
+var rows = [];
+for (var i = 0; i < 5; i++) {
+   var row = [];
+   for (var j = 0; j < 5; j++) {
+     if ((j + i) % 2 == 0)
+       row.push(new TextCell("##"));
+     else
+       row.push(new TextCell("  "));
+   }
+   rows.push(row);
+}
+console.log(drawTable(rows));
+
+// > ##    ##    ##
+//     ##    ##
+//  ##    ##    ##
+//     ##    ##
+//  ##    ##    ##
+
+Работает! Но поскольку все ячейки одного размера, код, раскладывающий таблицу, не делает ничего интересного.
+
+Источник данных по таблице гор, которую мы пробуем построить доступна в переменной MOUNTAINS из песочницы.
+
+Мы захотим выделить верхний ряд, который содержит названия колонок, подчеркнув ячейки серией нижних подчеркиваний. Не проблема, мы просто напишем вид ячеек, который будет отвечать за подчеркивание.
+
+function UnderlinedCell(inner) {
+  this.inner = inner;
+}
+UnderlinedCell.prototype.minWidth = function() {
+  return this.inner.minWidth();
+};
+UnderlinedCell.prototype.minHeight = function() {
+  return this.inner.minHeight() + 1;
+};
+UnderlinedCell.prototype.draw = function(width, height) {
+  return this.inner.draw(width, height - 1)
+    .concat([repeat("-", width)]);
 };
